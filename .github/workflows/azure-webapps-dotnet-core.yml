@@ -1,0 +1,38 @@
+name: Build and Deploy ASP.NET Core app to Azure Web App
+
+on:
+  push:
+    branches:
+      - main  # デプロイしたいブランチ名を指定
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: '3.1.x'  # 使用している.NET Coreのバージョンを指定
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Run tests
+      run: dotnet test --no-restore --verbosity normal
+
+    - name: Publish
+      run: dotnet publish -c Release -o ${{ github.workspace }}/publish
+
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: <your-app-name>  # Azure Web Appの名前
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ${{ github.workspace }}/publish
